@@ -155,7 +155,7 @@ function createLoginMessage(payload): string {
       await pkpWallet.init();
 
       console.log(pkpWallet)
-      const _signature = await pkpWallet.signMessage(message);
+      const signature = await pkpWallet.signMessage(message);
       console.log("The signature is :",signature)
       console.log("address :",pkpWallet.address)
       pkpWallet.setChainId(80001);
@@ -241,17 +241,15 @@ function createLoginMessage(payload): string {
   //   console.log(txHash);
   
       /**generate the payload */
-      const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
+        const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
       /**call the backend auth*/
 
       try{
         const response = await axios.post('http://localhost:1337/api/auth/payload', data);
         console.log('Payload Response from Server :', response.data);
-        //response.data.payload.chain = "80001"; // You can set this to the desired chain value
-
-        console.log('Updated Payload Response from Server :', response.data);
-
         /**if the payload is successful sign the response and send it back to backend for login*/
+        const payload = response.data;
+        console.log("The returned payload : ",payload)
         const payloadObject = createLoginMessage(response.data.payload)
         console.log("The login message : ",payloadObject)
         // const payload =  {
@@ -268,16 +266,16 @@ function createLoginMessage(payload): string {
         //   invalid_before: new Date().toISOString(),
         //   resources: ["https://example.com/profile"],
         // }
-        const signature = await pkpWallet.signMessage(payloadObject)
-        const payload = response.data.payload
-        console.log("The payload object is : ",response.data)
+        const payloadSign = await pkpWallet.signMessage(payloadObject)
+        console.log("signed payload message :",payloadSign);
         const data_final = {
-            payload: {
-              payload,signature
-            },
+            payload,
+            payloadSign
+          }
          }
-         console.log("The final object is : ",data_final)
-         //console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,signature))
+
+         console.log("The final data is : ",data_final)
+         console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,payloadSign))
 
         const test = {
           "payload":{
@@ -299,7 +297,7 @@ function createLoginMessage(payload): string {
 
         console.log("The hardcoded value : ",test)
         /**send the msg to server for login */
-        let _value = JSON.stringify(data_final);
+        let _value = JSON.stringify({data_final});
         let config = {
           method: 'post',
           maxBodyLength: Infinity,
@@ -309,57 +307,17 @@ function createLoginMessage(payload): string {
           },
           data : _value
         };
-        // axios.request(config)
-        // .then((response) => {
-        //   console.log(JSON.stringify(response.data));
-        // })
-        // .catch((error) => {
-        //   console.log(error);
-        // });
-        // try {
-        //   const response = await axios.request(config);
-        //   console.log("JWT Token:", response.data.token);
-
-        //   /**save the token to local storage */
-        //   localStorage.setItem('jwtToken', response.data.token);
-        //   //return response.data.token;
-        // } catch (error) {
-        //   console.error(error);
-        // }
-        const token = localStorage.getItem('jwtToken');
-        console.log("token : ",token)
-         const updated_config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/logout',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        };
-         try {
-          const response = await axios.request(updated_config);
-          console.log("Logout response :", response.data);
-
-          /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
-          //return response.data.token;
-        } catch (error) {
-          console.error(error);
-        }
-
-        /**try to access data after logout */
-        try {
-          const response = await axios.get('http://localhost:1337/api/auth/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          console.log('User data from server:', response.data);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-        }
+        axios.request(config)
+        .then((response) => {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
         
+        
+            
+          
       //   try{
       //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
       //    console.log('login Response from Server :', login_response.data);
@@ -367,10 +325,10 @@ function createLoginMessage(payload): string {
 
       }catch(err){console.log(err)}
 
-      setSignature(_signature);
+      setSignature(signature);
 
       // Get the address associated with the signature created by signing the message
-      const recoveredAddr = ethers.utils.verifyMessage(message, _signature);
+      const recoveredAddr = ethers.utils.verifyMessage(message, signature);
       setRecoveredAddress(recoveredAddr);
 
       // Check if the address associated with the signature is the same as the current PKP

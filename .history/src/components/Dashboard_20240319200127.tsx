@@ -247,11 +247,23 @@ function createLoginMessage(payload): string {
       try{
         const response = await axios.post('http://localhost:1337/api/auth/payload', data);
         console.log('Payload Response from Server :', response.data);
-        //response.data.payload.chain = "80001"; // You can set this to the desired chain value
+        response.data.payload.chain = "80001"; // You can set this to the desired chain value
 
         console.log('Updated Payload Response from Server :', response.data);
 
         /**if the payload is successful sign the response and send it back to backend for login*/
+      //   const payload = {
+      //     address: "0x431a60759F183D5a9AABB18833B835FEC16Cc248",
+      //     domain: "localhost:1337",
+      //     expiration_time: "2024-03-19T14:03:30.725Z",
+      //     invalid_before: "2024-03-19T13:43:30.725Z",
+      //     issued_at: "2024-03-19T11:28:43.069Z",
+      //     nonce: "227fb987-54f8-4983-91d5-2de569df16a4",
+      //     statement: "Please ensure that the domain above matches the URL of the current website.",
+      //     type: "evm",
+      //     version: "1",
+      //     chain:"80001"
+      // };
         const payloadObject = createLoginMessage(response.data.payload)
         console.log("The login message : ",payloadObject)
         // const payload =  {
@@ -309,57 +321,17 @@ function createLoginMessage(payload): string {
           },
           data : _value
         };
-        // axios.request(config)
-        // .then((response) => {
-        //   console.log(JSON.stringify(response.data));
-        // })
-        // .catch((error) => {
-        //   console.log(error);
-        // });
-        // try {
-        //   const response = await axios.request(config);
-        //   console.log("JWT Token:", response.data.token);
-
-        //   /**save the token to local storage */
-        //   localStorage.setItem('jwtToken', response.data.token);
-        //   //return response.data.token;
-        // } catch (error) {
-        //   console.error(error);
-        // }
-        const token = localStorage.getItem('jwtToken');
-        console.log("token : ",token)
-         const updated_config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/logout',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        };
-         try {
-          const response = await axios.request(updated_config);
-          console.log("Logout response :", response.data);
-
-          /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
-          //return response.data.token;
-        } catch (error) {
-          console.error(error);
-        }
-
-        /**try to access data after logout */
-        try {
-          const response = await axios.get('http://localhost:1337/api/auth/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          console.log('User data from server:', response.data);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-        }
+        axios.request(config)
+        .then((response) => {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
         
+        
+            
+          
       //   try{
       //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
       //    console.log('login Response from Server :', login_response.data);
@@ -370,7 +342,7 @@ function createLoginMessage(payload): string {
       setSignature(_signature);
 
       // Get the address associated with the signature created by signing the message
-      const recoveredAddr = ethers.utils.verifyMessage(message, _signature);
+      const recoveredAddr = ethers.utils.verifyMessage(message, signature);
       setRecoveredAddress(recoveredAddr);
 
       // Check if the address associated with the signature is the same as the current PKP

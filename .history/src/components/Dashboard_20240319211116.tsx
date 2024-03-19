@@ -327,28 +327,8 @@ function createLoginMessage(payload): string {
         //   console.error(error);
         // }
         const token = localStorage.getItem('jwtToken');
-        console.log("token : ",token)
-         const updated_config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/logout',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        };
-         try {
-          const response = await axios.request(updated_config);
-          console.log("Logout response :", response.data);
 
-          /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
-          //return response.data.token;
-        } catch (error) {
-          console.error(error);
-        }
-
-        /**try to access data after logout */
+        // const token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIweDcyNWIzNUQzNWVERTQxNTdlYkU1YTU3NjEzNjA5ZDQwQzREQjZhQjciLCJzdWIiOiIweDQzMWE2MDc1OUYxODNENWE5QUFCQjE4ODMzQjgzNUZFQzE2Q2MyNDgiLCJhdWQiOiJsb2NhbGhvc3Q6MTMzNyIsImV4cCI6MTcxMDk0NzcwOCwibmJmIjoxNzEwODYxMzE2LCJpYXQiOjE3MTA4NjEzMTYsImp0aSI6ImY3YTZkYTY3LWIzNzUtNGU0OC1iNWYwLTFiZjBkYjM1OTQzMiIsImN0eCI6WyJ1c2VyIl19.MHgyMjNmNjYyYzBlYTRlZjdiYmQzYmVkMjAxMWI1M2RkYmYzMGFmMjcxZjEzOTExYjZmMmIwZjg0ZDc1NDMwYjA4NjUxM2VkYTY5YjVmNTYwMGJlMGQ2MjFjOGJjZGU2OTE3NjE2NDU4MTBhNWJkYTIxNDllODc0ZTZhZWRjZDAzMTFj"
         try {
           const response = await axios.get('http://localhost:1337/api/auth/user', {
             headers: {
@@ -360,6 +340,7 @@ function createLoginMessage(payload): string {
           console.error('Error fetching user data:', err);
         }
         
+          
       //   try{
       //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
       //    console.log('login Response from Server :', login_response.data);

@@ -309,57 +309,17 @@ function createLoginMessage(payload): string {
           },
           data : _value
         };
-        // axios.request(config)
-        // .then((response) => {
-        //   console.log(JSON.stringify(response.data));
-        // })
-        // .catch((error) => {
-        //   console.log(error);
-        // });
-        // try {
-        //   const response = await axios.request(config);
-        //   console.log("JWT Token:", response.data.token);
-
-        //   /**save the token to local storage */
-        //   localStorage.setItem('jwtToken', response.data.token);
-        //   //return response.data.token;
-        // } catch (error) {
-        //   console.error(error);
-        // }
-        const token = localStorage.getItem('jwtToken');
-        console.log("token : ",token)
-         const updated_config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/logout',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        };
-         try {
-          const response = await axios.request(updated_config);
-          console.log("Logout response :", response.data);
-
-          /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
-          //return response.data.token;
-        } catch (error) {
-          console.error(error);
-        }
-
-        /**try to access data after logout */
-        try {
-          const response = await axios.get('http://localhost:1337/api/auth/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          console.log('User data from server:', response.data);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-        }
+        axios.request(config)
+        .then((response) => {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+          console.log(error);
+        });
         
+        
+            
+          
       //   try{
       //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
       //    console.log('login Response from Server :', login_response.data);

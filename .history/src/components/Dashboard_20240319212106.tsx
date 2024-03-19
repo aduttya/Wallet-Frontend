@@ -342,7 +342,7 @@ function createLoginMessage(payload): string {
           console.log("Logout response :", response.data);
 
           /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
+          //localStorage.setItem('jwtToken', response.data.token);
           //return response.data.token;
         } catch (error) {
           console.error(error);
