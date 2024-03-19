@@ -72,6 +72,7 @@ export async function authenticateWithGoogle(
     { redirectUri }
   );
   const authMethod = await googleProvider.authenticate();
+  console.log("Auth : ",authMethod)
   return authMethod;
 }
 
@@ -204,7 +205,6 @@ export async function getSessionSigs({
       authMethod,
       sessionSigsParams,
     });
-    console.log("The session sigs are : ",sessionSigs)
     return sessionSigs;
   } else {
     throw new Error(

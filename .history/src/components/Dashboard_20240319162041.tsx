@@ -251,7 +251,7 @@ function createLoginMessage(payload): string {
         const payload = response.data;
         console.log("The returned payload : ",payload)
         const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
+        console.log("message : ",payloadObject)
         // const payload =  {
         //   type: "Ethereum",
         //   domain: "example.com",
@@ -269,7 +269,7 @@ function createLoginMessage(payload): string {
         const payloadSign = await pkpWallet.signMessage(payloadObject)
         console.log("signed payload message :",payloadSign);
         const data_final = {
-           payload: payload,
+           payload:payload.payload,
            signature: payloadSign
          }
 
@@ -278,7 +278,7 @@ function createLoginMessage(payload): string {
         /**send the msg to server for login */
         
         try{
-          const login_response = await axios.post('http://localhost:8000/auth/login',data_final);
+          const login_response = await axios.post('http://localhost:8000/auth/login',{data_final});
          console.log('login Response from Server :', login_response.data);
        }catch(err){console.log(err)}
 

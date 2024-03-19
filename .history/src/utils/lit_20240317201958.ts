@@ -64,16 +64,16 @@ export async function signInWithGoogle(redirectUri: string): Promise<void> {
 /**
  * Get auth method object from redirect
  */
-export async function authenticateWithGoogle(
-  redirectUri: string
-): Promise<AuthMethod | undefined> {
-  const googleProvider = litAuthClient.initProvider<GoogleProvider>(
-    ProviderType.Google,
-    { redirectUri }
-  );
-  const authMethod = await googleProvider.authenticate();
-  return authMethod;
-}
+// export async function authenticateWithGoogle(
+//   redirectUri: string
+// ): Promise<AuthMethod | undefined> {
+//   const googleProvider = litAuthClient.initProvider<GoogleProvider>(
+//     ProviderType.Google,
+//     { redirectUri }
+//   );
+//   const authMethod = await googleProvider.authenticate();
+//   return authMethod;
+// }
 
 /**
  * Redirect to Lit login
@@ -204,7 +204,6 @@ export async function getSessionSigs({
       authMethod,
       sessionSigsParams,
     });
-    console.log("The session sigs are : ",sessionSigs)
     return sessionSigs;
   } else {
     throw new Error(

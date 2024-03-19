@@ -249,38 +249,23 @@ function createLoginMessage(payload): string {
         console.log('Payload Response from Server :', response.data);
         /**if the payload is successful sign the response and send it back to backend for login*/
         const payload = response.data;
-        console.log("The returned payload : ",payload)
-        const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
-        // const payload =  {
-        //   type: "Ethereum",
-        //   domain: "example.com",
-        //   address: pkpWallet.address,
-        //   statement: "Sign in to Example.com",
-        //   uri: "https://example.com/login",
-        //   version: "1",
-        //   chain_id: "1",
-        //   nonce: generateNonce(),
-        //   issued_at: new Date().toISOString(),
-        //   expiration_time: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-        //   invalid_before: new Date().toISOString(),
-        //   resources: ["https://example.com/profile"],
-        // }
-        const payloadSign = await pkpWallet.signMessage(payloadObject)
+        console.log("The returned payload : ",payload, payload.domain)
+        //const signObject = createLoginMessage(payload)
+        //console.log("message : ",signObject)
+        const payloadSign = await pkpWallet.signMessage(response.data)
         console.log("signed payload message :",payloadSign);
         const data_final = {
-           payload: payload,
+           payload:response.data,
            signature: payloadSign
          }
 
          console.log("sending payload object : ",data_final)
-         console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,payloadSign))
         /**send the msg to server for login */
         
         try{
           const login_response = await axios.post('http://localhost:8000/auth/login',data_final);
-         console.log('login Response from Server :', login_response.data);
-       }catch(err){console.log(err)}
+          console.log('login Response from Server :', login_response.data);
+        }catch(err){console.log(err)}
 
       }catch(err){console.log(err)}
 

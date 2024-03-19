@@ -251,7 +251,7 @@ function createLoginMessage(payload): string {
         const payload = response.data;
         console.log("The returned payload : ",payload)
         const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
+        console.log("message : ",payloadObject)
         // const payload =  {
         //   type: "Ethereum",
         //   domain: "example.com",

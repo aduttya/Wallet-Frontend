@@ -204,7 +204,6 @@ export async function getSessionSigs({
       authMethod,
       sessionSigsParams,
     });
-    console.log("The session sigs are : ",sessionSigs)
     return sessionSigs;
   } else {
     throw new Error(

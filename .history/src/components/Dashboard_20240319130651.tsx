@@ -93,9 +93,6 @@ function createAuthPayload(walletAddress, domain, chainId) {
 const redirectUri = ORIGIN + '/login';
 
 function createLoginMessage(payload): string {
-  console.log("the sent payload : ",payload)
-  console.log(payload.domain)
-  console.log(payload.versionField)
   const typeField = "Ethereum";
   const header = `${payload.domain} wants you to sign in with your ${typeField} account:`;
   let prefix = [header, payload.address].join("\n");
@@ -137,6 +134,7 @@ function createLoginMessage(payload): string {
       [`Resources:`, ...payload.resources.map((x) => `- ${x}`)].join("\n"),
     );
   }
+
   const suffix = suffixArray.join("\n");
   return [prefix, suffix].join("\n");
 }
@@ -248,39 +246,21 @@ function createLoginMessage(payload): string {
         const response = await axios.post('http://localhost:8000/auth/payload', data);
         console.log('Payload Response from Server :', response.data);
         /**if the payload is successful sign the response and send it back to backend for login*/
-        const payload = response.data;
-        console.log("The returned payload : ",payload)
-        const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
-        // const payload =  {
-        //   type: "Ethereum",
-        //   domain: "example.com",
-        //   address: pkpWallet.address,
-        //   statement: "Sign in to Example.com",
-        //   uri: "https://example.com/login",
-        //   version: "1",
-        //   chain_id: "1",
-        //   nonce: generateNonce(),
-        //   issued_at: new Date().toISOString(),
-        //   expiration_time: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-        //   invalid_before: new Date().toISOString(),
-        //   resources: ["https://example.com/profile"],
-        // }
-        const payloadSign = await pkpWallet.signMessage(payloadObject)
+        console.log("The returned payload : ",response.data)
+        const signObject = createLoginMessage(response.data)
+        const payloadSign = await pkpWallet.signMessage(signObject)
         console.log("signed payload message :",payloadSign);
-        const data_final = {
-           payload: payload,
-           signature: payloadSign
-         }
+        // const data_final = {
+        //   payload:response.data.payload,
+        //   signature: payloadSign
+        // }
 
-         console.log("sending payload object : ",data_final)
-         console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,payloadSign))
+       // console.log("sending payload object : ",data_final)
         /**send the msg to server for login */
-        
         try{
-          const login_response = await axios.post('http://localhost:8000/auth/login',data_final);
-         console.log('login Response from Server :', login_response.data);
-       }catch(err){console.log(err)}
+          const login_response = await axios.post('http://localhost:8000/auth/login',payloadSign);
+          console.log('login Response from Server :', login_response.data);
+        }catch(err){console.log(err)}
 
       }catch(err){console.log(err)}
 

@@ -15,12 +15,13 @@ import {authenticateWithGoogle,DOMAIN,ORIGIN} from '../utils/lit';
 import { http } from "viem";
 import axios from 'axios';
 import dotenv from 'dotenv'
-import { LitAuthMethod,LitSigner} from "@alchemy/aa-signers/lit-protocol";
-//import { LitSigner } from "@alchemy/aa-signers";
+import { LitAuthMethod} from "@alchemy/aa-signers/lit-protocol";
+import { LitSigner } from "@alchemy/aa-signers";
 
 import { encodeFunctionData,keccak256 } from "viem";
 import { LitAuthClient, isSignInRedirect,GoogleProvider } from '@lit-protocol/lit-auth-client';
 import { AuthMethodScope, ProviderType } from '@lit-protocol/constants';
+
 
 
 interface DashboardProps {
@@ -90,56 +91,7 @@ function createAuthPayload(walletAddress, domain, chainId) {
     });
   }
     
-const redirectUri = ORIGIN + '/login';
-
-function createLoginMessage(payload): string {
-  console.log("the sent payload : ",payload)
-  console.log(payload.domain)
-  console.log(payload.versionField)
-  const typeField = "Ethereum";
-  const header = `${payload.domain} wants you to sign in with your ${typeField} account:`;
-  let prefix = [header, payload.address].join("\n");
-  prefix = [prefix, payload.statement].join("\n\n");
-  if (payload.statement) {
-    prefix += "\n";
-  }
-
-  const suffixArray = [];
-  if (payload.uri) {
-    const uriField = `URI: ${payload.uri}`;
-    suffixArray.push(uriField);
-  }
-
-  const versionField = `Version: ${payload.version}`;
-  suffixArray.push(versionField);
-
-  if (payload.chain_id) {
-    const chainField = `Chain ID: ` + payload.chain_id || "1";
-    suffixArray.push(chainField);
-  }
-
-  const nonceField = `Nonce: ${payload.nonce}`;
-  suffixArray.push(nonceField);
-
-  const issuedAtField = `Issued At: ${payload.issued_at}`;
-  suffixArray.push(issuedAtField);
-
-  const expiryField = `Expiration Time: ${payload.expiration_time}`;
-  suffixArray.push(expiryField);
-
-  if (payload.invalid_before) {
-    const invalidBeforeField = `Not Before: ${payload.invalid_before}`;
-    suffixArray.push(invalidBeforeField);
-  }
-
-  if (payload.resources) {
-    suffixArray.push(
-      [`Resources:`, ...payload.resources.map((x) => `- ${x}`)].join("\n"),
-    );
-  }
-  const suffix = suffixArray.join("\n");
-  return [prefix, suffix].join("\n");
-}
+  const redirectUri = ORIGIN + '/login';
 
   /**
    * Sign a message with current PKP
@@ -160,30 +112,20 @@ function createLoginMessage(payload): string {
       console.log("address :",pkpWallet.address)
       pkpWallet.setChainId(80001);
       /**Testing smart account signer */
-      //const smartAccountSigner: SmartAccountSigner = pkpWallet; // Assuming PKPEthersWallet is compatible with SmartAccountSigner
-      //const signer: SmartAccountSigner = pkpWallet;
+      const smartAccountSigner: SmartAccountSigner = pkpWallet; // Assuming PKPEthersWallet is compatible with SmartAccountSigner
+      const signer: SmartAccountSigner = pkpWallet;
 
       
       
-      // const createLitSignerWithAuthMethod = async () => {
-      // return new LitSigner<LitAuthMethod>({
-      //   pkpPublicKey: currentAccount.publicKey,
-      //   rpcUrl: url,
-      //   network:'cayenne'
-      // });
-      // };
+      const createLitSignerWithAuthMethod = async () => {
+      return new LitSigner<LitAuthMethod>({
+        pkpPublicKey: currentAccount.publicKey,
+        rpcUrl: url,
+        network:'cayenne'
+      });
+      };
 
-      // const litSigner = await createLitSignerWithAuthMethod();
-
-      // console.log(litSigner)
-
-      // const authContext = {
-      //   , // Include details from the authenticated authMethod
-      //   sessionSigs, // Include the session signatures
-      //   // Add any other necessary details for the authentication context
-      // };
-      
-      // await litSigner.authenticate()
+      //const litSigner = await createLitSignerWithAuthMethod();
 //       await litSigner.authenticate({        
 //         controllerSessionSigs: sessionSigs,
 //         pkpPubKey: currentAccount.publicKey,
@@ -241,48 +183,29 @@ function createLoginMessage(payload): string {
   //   console.log(txHash);
   
       /**generate the payload */
-        const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
+     // const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
       /**call the backend auth*/
 
-      try{
-        const response = await axios.post('http://localhost:8000/auth/payload', data);
-        console.log('Payload Response from Server :', response.data);
-        /**if the payload is successful sign the response and send it back to backend for login*/
-        const payload = response.data;
-        console.log("The returned payload : ",payload)
-        const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
-        // const payload =  {
-        //   type: "Ethereum",
-        //   domain: "example.com",
-        //   address: pkpWallet.address,
-        //   statement: "Sign in to Example.com",
-        //   uri: "https://example.com/login",
-        //   version: "1",
-        //   chain_id: "1",
-        //   nonce: generateNonce(),
-        //   issued_at: new Date().toISOString(),
-        //   expiration_time: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-        //   invalid_before: new Date().toISOString(),
-        //   resources: ["https://example.com/profile"],
-        // }
-        const payloadSign = await pkpWallet.signMessage(payloadObject)
-        console.log("signed payload message :",payloadSign);
-        const data_final = {
-           payload: payload,
-           signature: payloadSign
-         }
+      // try{
+      //   const response = await axios.post('http://localhost:8000/auth/payload', data);
+      //   console.log('Payload Response from Server :', response.data);
+      //   /**if the payload is successful sign the response and send it back to backend for login*/
+      //   const signObject = JSON.stringify(response.data)
+      //   const payloadSign = await pkpWallet.signMessage(signObject)
+      //   console.log("signed payload message :",payloadSign);
+      //   const data_final = {
+      //     payload:response.data.payload,
+      //     signature: payloadSign
+      //   }
 
-         console.log("sending payload object : ",data_final)
-         console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,payloadSign))
-        /**send the msg to server for login */
-        
-        try{
-          const login_response = await axios.post('http://localhost:8000/auth/login',data_final);
-         console.log('login Response from Server :', login_response.data);
-       }catch(err){console.log(err)}
+      //   console.log("sending payload object : ",data_final)
+      //   /**send the msg to server for login */
+      //   try{
+      //     const login_response = await axios.post('http://localhost:8000/auth/login',data_final);
+      //     console.log('login Response from Server :', login_response.data);
+      //   }catch(err){console.log(err)}
 
-      }catch(err){console.log(err)}
+      // }catch(err){console.log(err)}
 
       setSignature(signature);
 
