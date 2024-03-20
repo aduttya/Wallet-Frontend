@@ -86,7 +86,7 @@ export default function LoginView() {
   // If user is authenticated and has selected an account, initialize session
   if (currentAccount && sessionSigs) {
     return (
-      <Dashboard currentAccount={currentAccount} sessionSigs={sessionSigs} />
+      <Dashboard currentAccount={currentAccount} sessionSigs={sessionSigs}/>
     );
   }
 

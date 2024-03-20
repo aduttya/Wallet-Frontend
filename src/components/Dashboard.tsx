@@ -57,6 +57,8 @@ const transferABI = [
 export const chain = polygonMumbai;
 const rpcTransport = http("https://polygon-mumbai.g.alchemy.com/v2/iZDtkSlQWHXN8af_yP2u2RuhBDrKzoDH");
 const url = "https://polygon-mumbai.g.alchemy.com/v2/iZDtkSlQWHXN8af_yP2u2RuhBDrKzoDH";
+
+
 export default function Dashboard({
   currentAccount,
   sessionSigs,
@@ -148,6 +150,7 @@ function createLoginMessage(payload): string {
     setLoading(true);
 
     try {
+
       const pkpWallet = new PKPEthersWallet({
         controllerSessionSigs: sessionSigs,
         pkpPubKey: currentAccount.publicKey,
@@ -159,12 +162,26 @@ function createLoginMessage(payload): string {
       console.log("The signature is :",signature)
       console.log("address :",pkpWallet.address)
       pkpWallet.setChainId(80001);
-      /**Testing smart account signer */
-      //const smartAccountSigner: SmartAccountSigner = pkpWallet; // Assuming PKPEthersWallet is compatible with SmartAccountSigner
-      //const signer: SmartAccountSigner = pkpWallet;
+      
+      const litSigner = new LitSigner<LitAuthMethod>({
+        pkpPublicKey: pkpWallet.publicKey,
+        rpcUrl: url,
+        network: "cayenne"
+      });
 
+      const authMethod = {
+        authMethodType: AuthMethodType.GoogleJwt,
+        accessToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjA5YmNmODAyOGUwNjUzN2…7y43rCET0OXn64LNlDZ6SttD8rdJ7zbG1E2o1QciCC36wchVA"
+      };
       
-      
+      await litSigner.authenticate({
+        context:sessionSigs
+      })
+
+      console.log("Lit signer : ",litSigner)
+      console.log("Lit Address : ",await litSigner.getAddress())
+
+      // console.log(data)
       // const createLitSignerWithAuthMethod = async () => {
       // return new LitSigner<LitAuthMethod>({
       //   pkpPublicKey: currentAccount.publicKey,
@@ -192,20 +209,24 @@ function createLoginMessage(payload): string {
 //       const address = await litSigner.getAddress();
 //       console.log(address)
 
-      //   const smartAccountClient = await createModularAccountAlchemyClient({
-      //   apiKey: `iZDtkSlQWHXN8af_yP2u2RuhBDrKzoDH`,
-      //   chain,
-      //   signer: smartAccountSigner,
-      //   gasManagerConfig: {
-      //     policyId: "710569c2-8372-449d-83c2-f501257ce597",
-      //   },      
-      // });
+        const smartAccountClient = await createModularAccountAlchemyClient({
+        apiKey: `iZDtkSlQWHXN8af_yP2u2RuhBDrKzoDH`,
+        chain,
+        signer: litSigner,
+        gasManagerConfig: {
+          policyId: "710569c2-8372-449d-83c2-f501257ce597",
+        },      
+      });
        
-      // console.log("Smart Contract Account : ",smartAccountClient)
-      // console.log("Smart Contract Account address : ",smartAccountClient.getAddress())
 
+      console.log("Smart Contract Account : ",await smartAccountClient.getAddress())
       
-
+      
+        // const signedMessage = await smartAccountClient.signMessage({
+        //   message: "hello",
+        //   account:litSigner
+        // });
+        // console.log("Signed message : ",signedMessage)
  // const signature = await signEIP712(domain, types, jobInfo);
 
     const uoCallData = encodeFunctionData({
@@ -213,6 +234,7 @@ function createLoginMessage(payload): string {
       functionName: "transfer",
       args: ["0x725b35D35eDE4157ebE5a57613609d40C4DB6aB7",'50000000'],
     });
+
     if (!uoCallData.startsWith('0x')) {
       throw new Error('Invalid call data format');
     }
@@ -224,148 +246,149 @@ function createLoginMessage(payload): string {
     };
 
       
-  //   let uo:any;
-  //   try{
-  //   uo = await smartAccountClient.sendUserOperation({
-  //     uo: {
-  //       target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
-  //       data: uoCallData,
-  //     },
-  //   });
+    let uo:any;
+    try{
+    uo = await smartAccountClient.sendUserOperation({
+      uo: {
+        target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
+        data: uoCallData,
+      },
+      account:litSigner
+    });
 
-  // }catch(err){
-  //   console.log(err)
-  // }
+  }catch(err){
+    console.log(err)
+  }
   
-  //   const txHash = await smartAccountClient.waitForUserOperationTransaction(uo);
-  //   console.log(txHash);
+    const txHash = await smartAccountClient.waitForUserOperationTransaction(uo);
+    console.log(txHash);
   
       /**generate the payload */
-      const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
+      //const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
+
       /**call the backend auth*/
+      // try{
+      //   const response = await axios.post('http://localhost:1337/api/auth/payload', data);
+      //   console.log('Payload Response from Server :', response.data);
+      //   //response.data.payload.chain = "80001"; // You can set this to the desired chain value
 
-      try{
-        const response = await axios.post('http://localhost:1337/api/auth/payload', data);
-        console.log('Payload Response from Server :', response.data);
-        //response.data.payload.chain = "80001"; // You can set this to the desired chain value
+      //   console.log('Updated Payload Response from Server :', response.data);
 
-        console.log('Updated Payload Response from Server :', response.data);
+      //   /**if the payload is successful sign the response and send it back to backend for login*/
+      //   const payloadObject = createLoginMessage(response.data.payload)
+      //   console.log("The login message : ",payloadObject)
+      //   // const payload =  {
+      //   //   type: "Ethereum",
+      //   //   domain: "example.com",
+      //   //   address: pkpWallet.address,
+      //   //   statement: "Sign in to Example.com",
+      //   //   uri: "https://example.com/login",
+      //   //   version: "1",
+      //   //   chain_id: "1",
+      //   //   nonce: generateNonce(),
+      //   //   issued_at: new Date().toISOString(),
+      //   //   expiration_time: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
+      //   //   invalid_before: new Date().toISOString(),
+      //   //   resources: ["https://example.com/profile"],
+      //   // }
+      //   const signature = await pkpWallet.signMessage(payloadObject)
+      //   const payload = response.data.payload
+      //   console.log("The payload object is : ",response.data)
+      //   const data_final = {
+      //       payload: {
+      //         payload,signature
+      //       },
+      //    }
+      //    console.log("The final object is : ",data_final)
+      //    //console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,signature))
 
-        /**if the payload is successful sign the response and send it back to backend for login*/
-        const payloadObject = createLoginMessage(response.data.payload)
-        console.log("The login message : ",payloadObject)
-        // const payload =  {
-        //   type: "Ethereum",
-        //   domain: "example.com",
-        //   address: pkpWallet.address,
-        //   statement: "Sign in to Example.com",
-        //   uri: "https://example.com/login",
-        //   version: "1",
-        //   chain_id: "1",
-        //   nonce: generateNonce(),
-        //   issued_at: new Date().toISOString(),
-        //   expiration_time: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-        //   invalid_before: new Date().toISOString(),
-        //   resources: ["https://example.com/profile"],
-        // }
-        const signature = await pkpWallet.signMessage(payloadObject)
-        const payload = response.data.payload
-        console.log("The payload object is : ",response.data)
-        const data_final = {
-            payload: {
-              payload,signature
-            },
-         }
-         console.log("The final object is : ",data_final)
-         //console.log("The verification : ",ethers.utils.verifyMessage(payloadObject,signature))
+      //   const test = {
+      //     "payload":{
+      //     "payload":{
+      //     "type":"evm",
+      //     "domain":"localhost:1337",
+      //     "address":"0xbE9c3578964C0FB32Da4DE76b73D5D289D0f54c4",
+      //     "statement":"Please ensure that the domain above matches the URL of the current website.",
+      //     "version":"1",
+      //     "chain_id":"80001",
+      //     "nonce":"945d864a-bb05-4956-b2b4-0735cc920f11",
+      //     "issued_at":"2024-03-19T10:36:20.916Z",
+      //     "expiration_time":"2024-03-19T11:09:44.950Z",
+      //     "invalid_before":"2024-03-19T10:49:44.950Z"
+      //     },
+      //     "signature":"0x272054bb9aa8dbfa04d4dde6bdbac09b9f2304e5889ab56759e203a3490259ce7447c6a94623608055ce21b25dae985f6611f4bf9514b1e71604e59a8abb05391b"
+      //     }
+      //     }
 
-        const test = {
-          "payload":{
-          "payload":{
-          "type":"evm",
-          "domain":"localhost:1337",
-          "address":"0xbE9c3578964C0FB32Da4DE76b73D5D289D0f54c4",
-          "statement":"Please ensure that the domain above matches the URL of the current website.",
-          "version":"1",
-          "chain_id":"80001",
-          "nonce":"945d864a-bb05-4956-b2b4-0735cc920f11",
-          "issued_at":"2024-03-19T10:36:20.916Z",
-          "expiration_time":"2024-03-19T11:09:44.950Z",
-          "invalid_before":"2024-03-19T10:49:44.950Z"
-          },
-          "signature":"0x272054bb9aa8dbfa04d4dde6bdbac09b9f2304e5889ab56759e203a3490259ce7447c6a94623608055ce21b25dae985f6611f4bf9514b1e71604e59a8abb05391b"
-          }
-          }
+      //   console.log("The hardcoded value : ",test)
+      //   /**send the msg to server for login */
+      //   let _value = JSON.stringify(data_final);
+      //   let config = {
+      //     method: 'post',
+      //     maxBodyLength: Infinity,
+      //     url: 'http://localhost:1337/api/auth/login',
+      //     headers: { 
+      //       'Content-Type': 'application/json'
+      //     },
+      //     data : _value
+      //   };
+      //   // axios.request(config)
+      //   // .then((response) => {
+      //   //   console.log(JSON.stringify(response.data));
+      //   // })
+      //   // .catch((error) => {
+      //   //   console.log(error);
+      //   // });
+      //   // try {
+      //   //   const response = await axios.request(config);
+      //   //   console.log("JWT Token:", response.data.token);
 
-        console.log("The hardcoded value : ",test)
-        /**send the msg to server for login */
-        let _value = JSON.stringify(data_final);
-        let config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/login',
-          headers: { 
-            'Content-Type': 'application/json'
-          },
-          data : _value
-        };
-        // axios.request(config)
-        // .then((response) => {
-        //   console.log(JSON.stringify(response.data));
-        // })
-        // .catch((error) => {
-        //   console.log(error);
-        // });
-        // try {
-        //   const response = await axios.request(config);
-        //   console.log("JWT Token:", response.data.token);
+      //   //   /**save the token to local storage */
+      //   //   localStorage.setItem('jwtToken', response.data.token);
+      //   //   //return response.data.token;
+      //   // } catch (error) {
+      //   //   console.error(error);
+      //   // }
+      //   // const token = localStorage.getItem('jwtToken');
+      //   // console.log("token : ",token)
+      //   //  const updated_config = {
+      //   //   method: 'post',
+      //   //   maxBodyLength: Infinity,
+      //   //   url: 'http://localhost:1337/api/auth/logout',
+      //   //   headers: { 
+      //   //     'Content-Type': 'application/json',
+      //   //     'Authorization': `Bearer ${token}`
+      //   //   },
+      //   // };
+      //   //  try {
+      //   //   const response = await axios.request(updated_config);
+      //   //   console.log("Logout response :", response.data);
 
-        //   /**save the token to local storage */
-        //   localStorage.setItem('jwtToken', response.data.token);
-        //   //return response.data.token;
-        // } catch (error) {
-        //   console.error(error);
-        // }
-        const token = localStorage.getItem('jwtToken');
-        console.log("token : ",token)
-         const updated_config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'http://localhost:1337/api/auth/logout',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        };
-         try {
-          const response = await axios.request(updated_config);
-          console.log("Logout response :", response.data);
+      //   //   /**save the token to local storage */
+      //   //   localStorage.removeItem('jwtToken');
+      //   //   //return response.data.token;
+      //   // } catch (error) {
+      //   //   console.error(error);
+      //   // }
 
-          /**save the token to local storage */
-          localStorage.removeItem('jwtToken');
-          //return response.data.token;
-        } catch (error) {
-          console.error(error);
-        }
-
-        /**try to access data after logout */
-        try {
-          const response = await axios.get('http://localhost:1337/api/auth/user', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          console.log('User data from server:', response.data);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-        }
+      //   /**try to access data after logout */
+      //   // try {
+      //   //   const response = await axios.get('http://localhost:1337/api/auth/user', {
+      //   //     headers: {
+      //   //       'Authorization': `Bearer ${token}`
+      //   //     }
+      //   //   });
+      //   //   console.log('User data from server:', response.data);
+      //   // } catch (err) {
+      //   //   console.error('Error fetching user data:', err);
+      //   // }
         
-      //   try{
-      //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
-      //    console.log('login Response from Server :', login_response.data);
-      //  }catch(err){console.log(err)}
+      // //   try{
+      // //     const login_response = await axios.post('http://localhost:1337/api/auth/login',test);
+      // //    console.log('login Response from Server :', login_response.data);
+      // //  }catch(err){console.log(err)}
 
-      }catch(err){console.log(err)}
+      // }catch(err){console.log(err)}
 
       setSignature(_signature);
 

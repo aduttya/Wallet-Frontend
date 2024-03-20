@@ -72,6 +72,7 @@ export async function authenticateWithGoogle(
     { redirectUri }
   );
   const authMethod = await googleProvider.authenticate();
+  console.log("Auth : ",authMethod)
   return authMethod;
 }
 
