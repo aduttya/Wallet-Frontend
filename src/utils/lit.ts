@@ -19,6 +19,15 @@ import {
   SessionSigs,
   AuthCallbackParams,
 } from '@lit-protocol/types';
+import useAccounts from '../hooks/useAccounts';
+import useSession from '../hooks/useSession';
+import {login} from './login';
+//const {currentAccount} = useAccounts();
+// const {sessionSigs} = useSession();
+
+//import useThirdwebAuth from '../hooks/useThirdwebAuth';
+//const { login} = useThirdwebAuth();
+
 
 export const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || 'localhost';
 export const ORIGIN =
@@ -38,6 +47,9 @@ export const litAuthClient: LitAuthClient = new LitAuthClient({
   },
   litNodeClient,
 });
+
+/**This needs to be changed in production to make sure the provider are automatically initialized */
+litAuthClient.initProvider<GoogleProvider>(ProviderType.Google, { redirectUri: ORIGIN + '/login' });
 
 /**
  * Validate provider
@@ -64,6 +76,19 @@ export async function signInWithGoogle(redirectUri: string): Promise<void> {
 /**
  * Get auth method object from redirect
  */
+// export async function authenticateWithGoogle(
+//   redirectUri: string
+// ): Promise<AuthMethod | undefined> {
+//   const googleProvider = litAuthClient.initProvider<GoogleProvider>(
+//     ProviderType.Google,
+//     { redirectUri }
+//   );
+
+//   // const value = litAuthClient.getProvider(ProviderType.Google)
+//   // console.log("value : ",value)
+//   const authMethod = await googleProvider.authenticate();
+//   return authMethod;
+// }
 export async function authenticateWithGoogle(
   redirectUri: string
 ): Promise<AuthMethod | undefined> {
@@ -72,7 +97,9 @@ export async function authenticateWithGoogle(
     { redirectUri }
   );
   const authMethod = await googleProvider.authenticate();
-  console.log("Auth : ",authMethod)
+  if (authMethod) {
+    localStorage.setItem('authMethod', JSON.stringify(authMethod));
+  }
   return authMethod;
 }
 
@@ -205,7 +232,6 @@ export async function getSessionSigs({
       authMethod,
       sessionSigsParams,
     });
-    console.log("The session sigs are : ",sessionSigs)
     return sessionSigs;
   } else {
     throw new Error(
@@ -270,7 +296,7 @@ export async function mintPKP(authMethod: AuthMethod): Promise<IRelayPKP> {
 /**
  * Get provider for given auth method
  */
-function getProviderByAuthMethod(authMethod: AuthMethod) {
+export function getProviderByAuthMethod(authMethod: AuthMethod) {
   switch (authMethod.authMethodType) {
     case AuthMethodType.GoogleJwt:
       return litAuthClient.getProvider(ProviderType.Google);

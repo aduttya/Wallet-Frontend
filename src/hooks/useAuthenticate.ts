@@ -156,11 +156,14 @@ export default function useAuthenticate(redirectUri?: string) {
     }
   }, [redirectUri, authWithGoogle, authWithDiscord]);
 
+  
+
   return {
     authWithEthWallet,
     authWithWebAuthn,
     authWithStytch,
     authMethod,
+    setAuthMethod,
     loading,
     error,
   };

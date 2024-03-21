@@ -88,7 +88,7 @@ export default function SignUpView() {
 
   if (currentAccount && sessionSigs) {
     return (
-      <Dashboard currentAccount={currentAccount} sessionSigs={sessionSigs} />
+      <Dashboard currentAccount={currentAccount} sessionSigs={sessionSigs} authMethod={authMethod} />
     );
   } else {
     return (
