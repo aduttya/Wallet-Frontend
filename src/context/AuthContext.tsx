@@ -1,14 +1,19 @@
-import React, { createContext, useContext, useReducer, Dispatch ,ReactNode} from 'react';
+import React, { createContext, useContext, useReducer, Dispatch, ReactNode } from 'react';
+import { useRouter } from 'next/router';
+import useAccounts from '../hooks/useAccounts';
 
 type AuthState = {
-  user: any; // Replace 'any' with the correct type for your user data
+  loggedIn: boolean; 
   loading: boolean;
   error: Error | null;
+  userData: any | null; // Add this line
+
 };
 
-type AuthAction =
-  | { type: 'SET_USER'; payload: any }
+export type AuthAction =
+  | { type: 'SET_LOGGED_IN'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_USER_DATA'; payload: any | null } 
   | { type: 'SET_ERROR'; payload: Error | null }
   | { type: 'LOGOUT' };
 
@@ -19,17 +24,18 @@ type AuthContextType = {
 };
 
 const initialState: AuthState = {
-  user: null,
+  loggedIn: false,
   loading: false,
   error: null,
+  userData: null, // Add this line
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
-    case 'SET_USER':
+    case 'SET_LOGGED_IN':
       return {
         ...state,
-        user: action.payload,
+        loggedIn: action.payload,
       };
     case 'SET_LOADING':
       return {
@@ -41,10 +47,16 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         error: action.payload,
       };
+    case 'SET_USER_DATA': // Add this case
+      return {
+        ...state,
+        userData: action.payload,
+      };
     case 'LOGOUT':
       return {
         ...state,
-        user: null,
+        loggedIn: false,
+        userData: null, // Clear user data on logout
       };
     default:
       return state;
@@ -55,29 +67,27 @@ const AuthContext = createContext<AuthContextType>({
   state: initialState,
   dispatch: () => {},
   logout: () => {},
-
 });
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(authReducer, initialState);
-    
+    const router = useRouter();
     const logout = () => {
-      console.log("The logout")
+      console.log("The logout");
       localStorage.removeItem('jwtToken');
-      localStorage.removeItem('authMethod')
+      localStorage.removeItem('authMethod');
       dispatch({ type: 'LOGOUT' });
     };
   
-  const value = {
-    state,
-    dispatch,
-    logout
-  };
+    const value = {
+      state,
+      dispatch,
+      logout
+    };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-//export const useAuth = (): AuthContextType => useContext(AuthContext);
 export const useAuth = (): AuthContextType & { logout: () => void } => {
   const context = useContext(AuthContext);
   if (!context) {

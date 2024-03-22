@@ -18,10 +18,13 @@ import {
   authenticateWithStytch,
 } from '../utils/lit';
 import { login } from '../utils/login';
-import useThirdwebAuth from '../hooks/useThirdwebAuth';
+//import useThirdwebAuth from '../hooks/useThirdwebAuth';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginView() {
+
+
   const redirectUri = ORIGIN + '/login';
 
   const {
@@ -48,11 +51,15 @@ export default function LoginView() {
     error: sessionError,
   } = useSession();
 
-  const {getUserData} = useThirdwebAuth();
+  //const {getUserData,login} = useThirdwebAuth();
+  const { dispatch,state } = useAuth();
+  const {loggedIn} = state
+  const userData = state.userData;
 
   
   const router = useRouter();
 
+  console.log("user data in login.tsx : ",userData)
 
   const error = authError || accountsError || sessionError;
 
@@ -110,11 +117,32 @@ export default function LoginView() {
     if (authMethod && currentAccount) {
       //console.log("user is authenticated, init session")
       initSession(authMethod, currentAccount);
-      //await login({currentAccount,sessionSigs})
-
-      //console.log("init session failed")
     }
   }, [authMethod, currentAccount, initSession]);
+
+  const [loginAttempted, setLoginAttempted] = useState(false);
+
+useEffect(() => {
+  // If session signatures are available and login hasn't been attempted yet, proceed with login
+  if (sessionSigs && currentAccount && !loginAttempted) {
+    const jwtToken = localStorage.getItem('jwtToken');
+
+    const performLogin = async () => {
+      try {
+        await login({ currentAccount, sessionSigs }, dispatch);
+        setLoginAttempted(true); // Mark login as attempted
+      } catch (error) {
+        console.error('Login error:', error);
+        // Handle login error (e.g., set an error state)
+      }
+    };
+    if(!jwtToken){
+      performLogin();
+    }else{
+      console.log("user is already logged with thirdweb")
+    }
+  }
+}, [sessionSigs, currentAccount, login, loginAttempted]);
 
   if (authLoading) {
     return (
@@ -152,7 +180,6 @@ export default function LoginView() {
   if (authMethod && accounts.length === 0) {
     return <CreateAccount signUp={goToSignUp} error={error} />;
   }
-
   // If user is not authenticated, show login methods
   return (
     <LoginMethods

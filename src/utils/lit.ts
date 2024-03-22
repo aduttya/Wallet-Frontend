@@ -92,6 +92,7 @@ export async function signInWithGoogle(redirectUri: string): Promise<void> {
 export async function authenticateWithGoogle(
   redirectUri: string
 ): Promise<AuthMethod | undefined> {
+
   const googleProvider = litAuthClient.initProvider<GoogleProvider>(
     ProviderType.Google,
     { redirectUri }

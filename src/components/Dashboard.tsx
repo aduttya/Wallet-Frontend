@@ -72,9 +72,13 @@ export default function Dashboard({
 }: DashboardProps) {
 
   const { state, logout } = useAuth(); // Destructure `state` and `logout` from the hook
-  const { user } = state; // Destructure `user` from the `state` object
+  const { loggedIn } = state; // Destructure `user` from the `state` object
+  const userData = state.userData;
 
-  console.log("user : ",user)
+  console.log("Is logged in ?",loggedIn)
+  if(loggedIn){
+    console.log("user data in Dashboard : ",userData)
+  }
   const [message, setMessage] = useState<string>('Free the web!');
   const [signature, setSignature] = useState<string>();
   const [recoveredAddress, setRecoveredAddress] = useState<string>();
@@ -84,6 +88,10 @@ export default function Dashboard({
 
   const { disconnectAsync } = useDisconnect();
   const router = useRouter();
+  const handleLogout = () => {
+    logout();
+    router.push('/login'); // Redirect to the login page
+  };
 
 
 function createAuthPayload(walletAddress, domain, chainId) {
@@ -429,18 +437,18 @@ function createLoginMessage(payload): string {
     setLoading(false);
   }
 
-  async function handleLogout() {
-    try {
-      await disconnectAsync();
-    } catch (err) {}
-    localStorage.removeItem('lit-wallet-sig');
-    router.reload();
-  }
+  // async function handleLogout() {
+  //   try {
+  //     await disconnectAsync();
+  //   } catch (err) {}
+  //   localStorage.removeItem('lit-wallet-sig');
+  //   router.reload();
+  // }
 
   return (
     <div className="container">
       <div className="logout-container">
-        <button className="btn btn--link" onClick={logout}>
+        <button className="btn btn--link" onClick={handleLogout}>
           Logout
         </button>
       </div>

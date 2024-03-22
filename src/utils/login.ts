@@ -1,9 +1,9 @@
 // hooks/useThirdwebAuth.ts
-import { useState,useCallback } from 'react';
+import { useState,useCallback,Dispatch} from 'react';
 import axios from 'axios';
 import { PKPEthersWallet } from '@lit-protocol/pkp-ethers';
 import {IRelayPKP, SessionSigs } from '@lit-protocol/types';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth,AuthAction } from '../context/AuthContext'; 
 
 
 function createAuthPayload(walletAddress, domain, chainId) {
@@ -78,7 +78,9 @@ interface LoginProps {
     sessionSigs: SessionSigs;
 }
 
-export async function login({ currentAccount, sessionSigs }: LoginProps) {
+export async function login({ currentAccount, sessionSigs }: LoginProps,
+  dispatch: Dispatch<AuthAction>
+  ) {
   try {
     const pkpWallet = new PKPEthersWallet({
       controllerSessionSigs: sessionSigs,
@@ -92,7 +94,6 @@ export async function login({ currentAccount, sessionSigs }: LoginProps) {
 
     const payloadObject = createLoginMessage(payload);
     const signature = await pkpWallet.signMessage(payloadObject);
-    console.log("The signature is : ",signature)
     const finalData = {
       payload: {
         payload,
@@ -112,9 +113,31 @@ export async function login({ currentAccount, sessionSigs }: LoginProps) {
 
     const loginResponse = await axios.request(config);
     localStorage.setItem('jwtToken', loginResponse.data.token);
+    dispatch({ type: 'SET_LOGGED_IN', payload: true });
     console.log("login with thirdweb is successful")
+
+    const userData = await getUserData();
+    dispatch({ type: 'SET_USER_DATA', payload: userData });
+
     return loginResponse.data;
   } catch (error) {
     throw error;
   }
 }
+
+
+
+const getUserData = async () => {
+    const token = localStorage.getItem('jwtToken');
+    try {
+      const response = await axios.get('http://localhost:1337/api/auth/user', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+     // console.log(response.data)
+      return response.data;
+    } catch (err) {
+    } finally {
+    }
+  };
