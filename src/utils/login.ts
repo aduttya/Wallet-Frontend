@@ -114,10 +114,13 @@ export async function login({ currentAccount, sessionSigs }: LoginProps,
     const loginResponse = await axios.request(config);
     localStorage.setItem('jwtToken', loginResponse.data.token);
     dispatch({ type: 'SET_LOGGED_IN', payload: true });
+    await getUserData(
+      dispatch
+    )
     console.log("login with thirdweb is successful")
 
-    const userData = await getUserData();
-    dispatch({ type: 'SET_USER_DATA', payload: userData });
+    //const userData = await getUserData();
+    //dispatch({ type: 'SET_USER_DATA', payload: userData });
 
     return loginResponse.data;
   } catch (error) {
@@ -127,7 +130,9 @@ export async function login({ currentAccount, sessionSigs }: LoginProps,
 
 
 
-const getUserData = async () => {
+export const getUserData = async (  
+  dispatch: Dispatch<AuthAction>
+  ) => {
     const token = localStorage.getItem('jwtToken');
     try {
       const response = await axios.get('http://localhost:1337/api/auth/user', {
@@ -136,7 +141,8 @@ const getUserData = async () => {
         }
       });
      // console.log(response.data)
-      return response.data;
+     dispatch({ type: 'SET_USER_DATA', payload: response.data });
+     return response.data;
     } catch (err) {
     } finally {
     }

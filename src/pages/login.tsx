@@ -17,7 +17,7 @@ import {
   authenticateWithWebAuthn,
   authenticateWithStytch,
 } from '../utils/lit';
-import { login } from '../utils/login';
+import { login,getUserData } from '../utils/login';
 //import useThirdwebAuth from '../hooks/useThirdwebAuth';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -76,7 +76,6 @@ export default function LoginView() {
   function goToSignUp() {
     router.push('/');
   }
-
   //console.log("Auth value {}: ",authMethod)
   // const [loginAttempted, setLoginAttempted] = useState(false);
   // useEffect(() => {
@@ -120,7 +119,7 @@ export default function LoginView() {
     }
   }, [authMethod, currentAccount, initSession]);
 
-  const [loginAttempted, setLoginAttempted] = useState(false);
+const [loginAttempted, setLoginAttempted] = useState(false);
 
 useEffect(() => {
   // If session signatures are available and login hasn't been attempted yet, proceed with login
@@ -140,6 +139,13 @@ useEffect(() => {
       performLogin();
     }else{
       console.log("user is already logged with thirdweb")
+      dispatch({ type: 'SET_LOGGED_IN', payload: true });
+      const getUser = async () => {
+        // Define getUserData function here or import it
+        await getUserData(dispatch)
+      };
+      getUser(); // Call getUserData without await
+
     }
   }
 }, [sessionSigs, currentAccount, login, loginAttempted]);
