@@ -8,7 +8,7 @@ import { AuthMethodType } from '@lit-protocol/constants';
 import { checkAndSignAuthMessage, LitNodeClient } from '@lit-protocol/lit-node-client';
 import { litNodeClient,litAuthClient } from '../utils/lit';
 import { createModularAccountAlchemyClient } from "@alchemy/aa-alchemy";
-import { LocalAccountSigner, polygonMumbai,createSmartAccountClient,SmartAccountSigner } from "@alchemy/aa-core";
+import { LocalAccountSigner, polygonMumbai,createSmartAccountClient,SmartAccountSigner,Address } from "@alchemy/aa-core";
 import { createMultiOwnerModularAccount } from "@alchemy/aa-accounts";
 import {authenticateWithGoogle,DOMAIN,ORIGIN} from '../utils/lit';
 
@@ -57,7 +57,26 @@ const transferABI = [
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
-  }
+  },
+  {
+    "constant": true,
+    "inputs": [
+        {
+            "name": "_owner",
+            "type": "address"
+        }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+        {
+            "name": "balance",
+            "type": "uint256"
+        }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+}
 ]
 
 export const chain = polygonMumbai;
@@ -195,41 +214,7 @@ function createLoginMessage(payload): string {
         authMethodType: authMethod.authMethodType,
         accessToken: authMethod.accessToken
       };
-      
-      // console.log("The AUTH METHOD TYPE : ",authMethod.authMethodType)
-      // console.log("The Access Token : ",authMethod.accessToken)
 
-      // await litSigner.authenticate({
-      //   context:{
-      //     authMethodType: authMethod.authMethodType,
-      //     accessToken: JSON.stringify(authMethod.accessToken)   
-      //   },
-      //   chain: "ethereum"
-      // })
-
-      //console.log("Lit signer : ",litSigner)
-      //console.log("Lit Address : ",await litSigner.getAddress())
-
-      // console.log(data)
-      // const createLitSignerWithAuthMethod = async () => {
-      // return new LitSigner<LitAuthMethod>({
-      //   pkpPublicKey: currentAccount.publicKey,
-      //   rpcUrl: url,
-      //   network:'cayenne'
-      // });
-      // };
-
-      //  const litSigner = await createLitSignerWithAuthMethod();
-
-      // console.log(litSigner)
-
-      // const authContext = {
-      //   , // Include details from the authenticated authMethod
-      //   sessionSigs, // Include the session signatures
-      //   // Add any other necessary details for the authentication context
-      // };
-      
-      // await litSigner.authenticate()
       await litSigner.authenticate({        
         context: sessionSigs,
       })
@@ -240,15 +225,17 @@ function createLoginMessage(payload): string {
        const litSignerSignedMessage = await litSigner.signMessage("Hello World!");
         console.log("litSignerSignedMessage : ",litSignerSignedMessage)
 
+        
         let authDetails = await litSigner.getAuthDetails();
         console.log("authDetails : ",authDetails)
+
         const smartAccountClient = await createModularAccountAlchemyClient({
         apiKey: `iZDtkSlQWHXN8af_yP2u2RuhBDrKzoDH`,
         chain,
         signer: litSigner,
-        gasManagerConfig: {
-          policyId: "00f72535-0323-4f28-93ce-53bd09492b5e",
-        },      
+        // gasManagerConfig: {
+        //   policyId: "00f72535-0323-4f28-93ce-53bd09492b5e",
+        // },      
       });
        
 
@@ -262,47 +249,87 @@ function createLoginMessage(payload): string {
     const uoCallData = encodeFunctionData({
       abi: transferABI,
       functionName: "transfer",
-      args: ["0x725b35D35eDE4157ebE5a57613609d40C4DB6aB7",'1000000'],
+      args: ["0x725b35D35eDE4157ebE5a57613609d40C4DB6aB7",'2000000'],
     });
+    // const uoCallData = encodeFunctionData({
+    //   abi: transferABI,
+    //   functionName: "balanceOf",
+    //   args: ["0x725b35D35eDE4157ebE5a57613609d40C4DB6aB7"],
+    // });
 
     if (!uoCallData.startsWith('0x')) {
       throw new Error('Invalid call data format');
     }
 
-    // const transaction = {
-    //   to: '0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97',
-    //   data: uoCallData,
-    //   // Optional: Specify gasPrice and gasLimit if desired
-    // };
+    const transaction = {
+      from: pkpWallet.address,
+      to: '0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97',
+      data: uoCallData,
+      // Optional: Specify gasPrice and gasLimit if desired
+    };
+    await pkpWallet.setRpc(url)
+    console.log("The Account balance : ",await pkpWallet.getBalance())
+    const signedTransactionRequest = await pkpWallet.signTransaction(
+      transaction
+    );    
+    const tx = await pkpWallet.sendTransaction(signedTransactionRequest)
+    console.log(tx)
 
-    const elligibility = await smartAccountClient.checkGasSponsorshipEligibility({
+    // const elligibility = await smartAccountClient.checkGasSponsorshipEligibility({
+    //     target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
+    //     data: uoCallData,
       
-        target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
-        data: uoCallData,
-      
-    });
+    // });
 
-    console.log("gas policy eligibility : ")
+
+
+    //console.log("gas policy eligibility : ",elligibility)
     
-    console.log(`User Operation is ${elligibility ? "eligible" : "ineligible"} for gas sponsorship`);
+    
+  //  console.log(`User Operation is ${elligibility ? "eligible" : "ineligible"} for gas sponsorship`);
+    // const uoSimResult = await smartAccountClient.simulateUserOperation({
+    //   uo: uoCallData,
+    // });
+    
+    // if (uoSimResult.error) {
+    //   console.error(uoSimResult.error.message);
+    // }
     
     const overrides = { paymasterAndData: "0x" };
+  //   const vitalikAddress =
+  //   "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" as Address;
+  // // Send a user operation from your smart account to Vitalik that does nothing
+  // const { hash: uoHash } = await smartAccountClient.sendUserOperation({
+  //   uo: {
+  //     target: vitalikAddress, // The desired target contract address
+  //     data: "0x", // The desired call data
+  //     value: 0n, // (Optional) value to send the target contract address
+  //   },
+  // });
 
-    let uo:any;
-    try{
-    uo = await smartAccountClient.sendUserOperation({
-      uo:{
-        target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
-        data: uoCallData,
-      },
-    });
+  // console.log("UserOperation Hash: ", uoHash); // Log the user operation hash
 
-  }catch(err){
-    console.log(err)
-  }
+  // // Wait for the user operation to be mined
+  // const txHash = await smartAccountClient.waitForUserOperationTransaction({
+  //   hash: uoHash,
+  // });
+
+  // console.log("txHash : ",txHash)
+  //   let uo:any;
+  //   try{
+  //   uo = await smartAccountClient.sendUserOperation({
+  //     uo:{
+  //       target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
+  //       data: uoCallData,
+  //     },
+  //   });
+
+  // }catch(err){
+  //   console.log(err)
+  // }
   
-    const txHash = await smartAccountClient.waitForUserOperationTransaction(uo);
-    console.log(txHash);
+  //   const txHash = await smartAccountClient.waitForUserOperationTransaction(uo);
+  //   console.log(txHash);
   
       /**generate the payload */
       // const data = createAuthPayload(pkpWallet.address,"localhost:3000",1)
