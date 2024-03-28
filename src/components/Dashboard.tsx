@@ -25,6 +25,8 @@ import { LitAuthClient, isSignInRedirect,GoogleProvider } from '@lit-protocol/li
 import { AuthMethodScope, ProviderType } from '@lit-protocol/constants';
 import useThirdwebAuth from '../hooks/useThirdwebAuth';
 
+//const signer = LocalAccountSigner.privateKeyToAccountSigner(process.env.PRIVATE_KEY);
+
 
 const redirectUri = ORIGIN + '/login';
 
@@ -198,6 +200,7 @@ function createLoginMessage(payload): string {
       });
       await pkpWallet.init();
 
+      console.log(sessionSigs)
       //console.log(pkpWallet)
       const _signature = await pkpWallet.signMessage(message);
       console.log("The signature is :",_signature)
@@ -261,19 +264,19 @@ function createLoginMessage(payload): string {
       throw new Error('Invalid call data format');
     }
 
-    const transaction = {
-      from: pkpWallet.address,
-      to: '0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97',
-      data: uoCallData,
-      // Optional: Specify gasPrice and gasLimit if desired
-    };
-    await pkpWallet.setRpc(url)
-    console.log("The Account balance : ",await pkpWallet.getBalance())
-    const signedTransactionRequest = await pkpWallet.signTransaction(
-      transaction
-    );    
-    const tx = await pkpWallet.sendTransaction(signedTransactionRequest)
-    console.log(tx)
+    // const transaction = {
+    //   from: pkpWallet.address,
+    //   to: '0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97',
+    //   data: uoCallData,
+    //   // Optional: Specify gasPrice and gasLimit if desired
+    // };
+    // await pkpWallet.setRpc(url)
+    // console.log("The Account balance : ",await pkpWallet.getBalance())
+    // const signedTransactionRequest = await pkpWallet.signTransaction(
+    //   transaction
+    // );    
+    // const tx = await pkpWallet.sendTransaction(signedTransactionRequest)
+    // console.log(tx)
 
     // const elligibility = await smartAccountClient.checkGasSponsorshipEligibility({
     //     target: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
@@ -296,23 +299,23 @@ function createLoginMessage(payload): string {
     // }
     
     const overrides = { paymasterAndData: "0x" };
-  //   const vitalikAddress =
-  //   "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" as Address;
-  // // Send a user operation from your smart account to Vitalik that does nothing
-  // const { hash: uoHash } = await smartAccountClient.sendUserOperation({
-  //   uo: {
-  //     target: vitalikAddress, // The desired target contract address
-  //     data: "0x", // The desired call data
-  //     value: 0n, // (Optional) value to send the target contract address
-  //   },
-  // });
+    const vitalikAddress =
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" as Address;
+  // Send a user operation from your smart account to Vitalik that does nothing
+  const { hash: uoHash } = await smartAccountClient.sendUserOperation({
+    uo: {
+      target: vitalikAddress, // The desired target contract address
+      data: "0x", // The desired call data
+      value: 1n, // (Optional) value to send the target contract address
+    },
+  });
 
-  // console.log("UserOperation Hash: ", uoHash); // Log the user operation hash
+  console.log("UserOperation Hash: ", uoHash); // Log the user operation hash
 
-  // // Wait for the user operation to be mined
-  // const txHash = await smartAccountClient.waitForUserOperationTransaction({
-  //   hash: uoHash,
-  // });
+  // Wait for the user operation to be mined
+  const txHash = await smartAccountClient.waitForUserOperationTransaction({
+    hash: uoHash,
+  });
 
   // console.log("txHash : ",txHash)
   //   let uo:any;
